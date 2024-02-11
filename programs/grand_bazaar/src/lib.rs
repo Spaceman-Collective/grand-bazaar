@@ -7,11 +7,12 @@ use anchor_lang::prelude::*;
 declare_id!("492EodhvjLq63FAsEKYtuULsKec1nmF2K526MBWrTBSz");
 
 #[program]
-pub mod lots_items_manager {
+pub mod grand_bazaar {
     use super::*;
 
-    pub fn init_signer(ctx: Context<InitSigner>, game_id: u64) -> Result<()> {
-        init_signer::handler(ctx, game_id).unwrap();
+    /* Compressed Tradables */
+    pub fn init_signer(ctx: Context<InitGame>, game_id: u64) -> Result<()> {
+        init_game::handler(ctx, game_id).unwrap();
         Ok(())
     }
 
@@ -55,5 +56,6 @@ pub mod lots_items_manager {
         Ok(())
     }
 
+    /* Grand Bazaar */
 }
 

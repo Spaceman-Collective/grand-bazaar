@@ -1,4 +1,4 @@
-pub mod init_signer;
+pub mod init_game;
 pub mod mint_item_collection;
 pub mod mint_item_account;
 pub mod mint_to_item_account;
@@ -8,7 +8,7 @@ pub mod decompress;
 pub mod compress;
 pub mod transfer_and_decompress;
 
-pub use init_signer::*;
+pub use init_game::*;
 pub use mint_item_collection::*;
 pub use mint_item_account::*;
 pub use mint_to_item_account::*;
