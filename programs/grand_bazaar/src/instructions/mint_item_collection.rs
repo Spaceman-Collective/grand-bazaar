@@ -81,6 +81,8 @@ pub struct MintItemCollection<'info> {
     /// CHECK: Metadata program will create it
     #[account(mut)]
     pub metadata_account: UncheckedAccount<'info>,
+
+    /// CHECK: This is a program. and we check it. gud comment
     #[account(address = MPL_TOKEN_METADATA_ID)]
     pub mpl_program: UncheckedAccount<'info>,
     #[account(
