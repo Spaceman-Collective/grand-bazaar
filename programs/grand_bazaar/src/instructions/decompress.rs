@@ -6,4 +6,3 @@ pub fn handler(ctx: Context<Decompress>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct Decompress {}
-

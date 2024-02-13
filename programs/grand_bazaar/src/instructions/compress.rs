@@ -6,4 +6,3 @@ pub fn handler(ctx: Context<Compress>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct Compress {}
-

@@ -2,8 +2,6 @@ use anchor_lang::prelude::*;
 
 use crate::MaxSize;
 
-
-
 #[account]
 pub struct GamePDA {
     pub game_id: u64,

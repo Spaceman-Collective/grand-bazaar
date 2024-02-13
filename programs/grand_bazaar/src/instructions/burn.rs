@@ -6,4 +6,3 @@ pub fn handler(ctx: Context<Burn>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct Burn {}
-

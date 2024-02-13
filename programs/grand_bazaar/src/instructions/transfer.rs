@@ -6,4 +6,3 @@ pub fn handler(ctx: Context<Transfer>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct Transfer {}
-

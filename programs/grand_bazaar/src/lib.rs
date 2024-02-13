@@ -1,9 +1,9 @@
 mod instructions;
 mod state;
 
+use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
-use anchor_lang::prelude::*;
 declare_id!("492EodhvjLq63FAsEKYtuULsKec1nmF2K526MBWrTBSz");
 
 #[program]
@@ -11,17 +11,17 @@ pub mod grand_bazaar {
     use super::*;
 
     /* Compressed Tradables */
-    pub fn init_signer(ctx: Context<InitGame>, game_id: u64) -> Result<()> {
-        init_game::handler(ctx, game_id).unwrap();
+    pub fn init_signer(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
+        init_game::handler(ctx, metadata).unwrap();
         Ok(())
     }
 
-    pub fn mint_item_collection(ctx: Context<MintItemCollection>) -> Result<()> {
-        mint_item_collection::handler(ctx).unwrap();
+    pub fn mint_item_collection(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMetadata) -> Result<()> {
+        mint_item_collection::handler(ctx, game_id, metadata).unwrap();
         Ok(())
     }
 
-    pub fn mint_item_account(ctx: Context<MintItemAccount> ) -> Result<()> {
+    pub fn mint_item_account(ctx: Context<MintItemAccount>) -> Result<()> {
         mint_item_account::handler(ctx).unwrap();
         Ok(())
     }
@@ -32,7 +32,7 @@ pub mod grand_bazaar {
     }
 
     pub fn transfer(ctx: Context<Transfer>) -> Result<()> {
-        transfer::handler(ctx).unwrap(); 
+        transfer::handler(ctx).unwrap();
         Ok(())
     }
 
@@ -58,4 +58,3 @@ pub mod grand_bazaar {
 
     /* Grand Bazaar */
 }
-

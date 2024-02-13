@@ -6,4 +6,3 @@ pub fn handler(ctx: Context<MintItemAccount>) -> Result<()> {
 
 #[derive(Accounts)]
 pub struct MintItemAccount {}
-
