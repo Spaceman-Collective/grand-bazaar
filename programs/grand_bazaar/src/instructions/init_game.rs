@@ -1,6 +1,13 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
-use mpl_token_metadata::{instructions::{CreateV1CpiBuilder, MintV1CpiBuilder}, types::{PrintSupply, TokenStandard}, ID as MPL_TOKEN_METADATA_ID};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
+use mpl_token_metadata::{
+    instructions::{CreateV1CpiBuilder, MintV1CpiBuilder},
+    types::{PrintSupply, TokenStandard},
+    ID as MPL_TOKEN_METADATA_ID,
+};
 use solana_program::sysvar::ID as SysvarID;
 
 use crate::*;
@@ -16,7 +23,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     let game_setting_seeds: &[&[u8]] = &[gid.as_ref(), &[ctx.bumps.game]];
     let signer_seeds = &[game_setting_seeds];
 
-    // Creates metadata, master edition, and mints to 
+    // Creates metadata, master edition, and mints to
     CreateV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
         .metadata(&ctx.accounts.metadata_account.to_account_info())
         .mint(&ctx.accounts.mint.to_account_info(), false)
@@ -35,7 +42,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .invoke_signed(signer_seeds)
         .unwrap();
 
-    // Mints the NFT to the Game PDA 
+    // Mints the NFT to the Game PDA
     MintV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
         .token(&ctx.accounts.token.to_account_info())
         .token_owner(Some(&ctx.accounts.game.to_account_info()))
@@ -49,7 +56,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .spl_token_program(&ctx.accounts.token_program.to_account_info())
         .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
         .amount(1)
-        .invoke_signed(signer_seeds)?; 
+        .invoke_signed(signer_seeds)?;
 
     Ok(())
 }
@@ -88,10 +95,13 @@ pub struct InitGame<'info> {
 
     /// CHECK: This is a program. and we check it. gud comment
     #[account(address = MPL_TOKEN_METADATA_ID)]
+
+    /// CHECK: This is a program. and we check it. gud comment
     pub mpl_program: UncheckedAccount<'info>,
     #[account(
         address = SysvarID
     )]
+    /// CHECK: This is a program. and we check it. gud comment
     pub sysvar_account: UncheckedAccount<'info>,
 
     #[account(

@@ -16,7 +16,11 @@ pub mod grand_bazaar {
         Ok(())
     }
 
-    pub fn mint_item_collection(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMetadata) -> Result<()> {
+    pub fn mint_item_collection(
+        ctx: Context<MintItemCollection>,
+        game_id: u64,
+        metadata: ItemMetadata,
+    ) -> Result<()> {
         mint_item_collection::handler(ctx, game_id, metadata).unwrap();
         Ok(())
     }

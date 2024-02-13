@@ -1,19 +1,30 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
-use mpl_token_metadata::{instructions::{CreateV1CpiBuilder, MintV1CpiBuilder}, types::{Collection, PrintSupply, TokenStandard}, ID as MPL_TOKEN_METADATA_ID};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
+use mpl_token_metadata::{
+    instructions::{CreateV1CpiBuilder, MintV1CpiBuilder},
+    types::{Collection, PrintSupply, TokenStandard},
+    ID as MPL_TOKEN_METADATA_ID,
+};
 use solana_program::sysvar::ID as SysvarID;
 
 use crate::*;
 /**
  * This function should mint an item collection NFT settings *its* collection to the Game NFT
  */
-pub fn handler(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMetadata) -> Result<()> {
+pub fn handler(
+    ctx: Context<MintItemCollection>,
+    game_id: u64,
+    metadata: ItemMetadata,
+) -> Result<()> {
     let gid = game_id.to_le_bytes();
     // Create game collection metadata
     let game_setting_seeds: &[&[u8]] = &[gid.as_ref(), &[ctx.bumps.game]];
     let signer_seeds = &[game_setting_seeds];
 
-    // Creates metadata, master edition, and mints to 
+    // Creates metadata, master edition, and mints to
     CreateV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
         .metadata(&ctx.accounts.metadata_account.to_account_info())
         .mint(&ctx.accounts.mint.to_account_info(), false)
@@ -25,7 +36,10 @@ pub fn handler(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMet
         .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
         .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
         .token_standard(TokenStandard::NonFungible)
-        .collection(Collection { verified: true, key: ctx.accounts.game_collection_mint.key() })
+        .collection(Collection {
+            verified: true,
+            key: ctx.accounts.game_collection_mint.key(),
+        })
         .uri(metadata.uri)
         .name(metadata.name)
         .seller_fee_basis_points(0)
@@ -33,7 +47,7 @@ pub fn handler(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMet
         .invoke_signed(signer_seeds)
         .unwrap();
 
-    // Mints the NFT to the Game PDA 
+    // Mints the NFT to the Game PDA
     MintV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
         .token(&ctx.accounts.token.to_account_info())
         .token_owner(Some(&ctx.accounts.game.to_account_info()))
@@ -47,7 +61,7 @@ pub fn handler(ctx: Context<MintItemCollection>, game_id: u64, metadata: ItemMet
         .spl_token_program(&ctx.accounts.token_program.to_account_info())
         .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
         .amount(1)
-        .invoke_signed(signer_seeds)?; 
+        .invoke_signed(signer_seeds)?;
 
     Ok(())
 }
@@ -85,6 +99,8 @@ pub struct MintItemCollection<'info> {
     /// CHECK: This is a program. and we check it. gud comment
     #[account(address = MPL_TOKEN_METADATA_ID)]
     pub mpl_program: UncheckedAccount<'info>,
+
+    /// CHECK: This is a program. and we check it. gud comment
     #[account(
         address = SysvarID
     )]
