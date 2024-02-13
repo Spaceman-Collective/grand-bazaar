@@ -11,7 +11,7 @@ pub mod grand_bazaar {
     use super::*;
 
     /* Compressed Tradables */
-    pub fn init_signer(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
+    pub fn init_game(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         init_game::handler(ctx, metadata).unwrap();
         Ok(())
     }
