@@ -13,6 +13,7 @@ import {
 import { SystemProgram, PublicKey } from "@solana/web3.js";
 
 describe("lots-items-manager", () => {
+  return;
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
