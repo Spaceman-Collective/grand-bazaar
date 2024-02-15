@@ -7,7 +7,9 @@
         "@coral-xyz/anchor": "^0.29.0",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
-        "bn.js": "^5.2.1"
+        "bn.js": "^5.2.1",
+        "bs58": "^5.0.0",
+        "byteify": "^4.1.4"
     },
     "devDependencies": {
         "@solana/spl-token": "0.4.0",
