@@ -119,6 +119,14 @@ pub struct InitGame<'info> {
     pub master_edition_account: UncheckedAccount<'info>,
 
     // Minting NFT
+    #[account(
+        init,
+        seeds = [b"token", metadata.game_id.to_le_bytes().as_ref()],
+        bump,
+        payer = signer,
+        token::mint = mint,
+        token::authority = game.to_account_info(),
+    )]
     pub token: Account<'info, TokenAccount>,
     pub ata_program: Program<'info, AssociatedToken>,
 }

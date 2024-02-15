@@ -74,7 +74,6 @@ describe("grand_bazaar", () => {
             ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             sysvarAccount: web3.SYSVAR_INSTRUCTIONS_PUBKEY
         })
-            .signers([gameMintKey])
             .instruction();
 
         const { blockhash, lastValidBlockHeight } =
@@ -88,7 +87,7 @@ describe("grand_bazaar", () => {
         }).compileToV0Message();
 
         const tx = new web3.VersionedTransaction(msg);
-        tx.sign([SIGNER])
+        tx.sign([SIGNER, gameMintKey])
         const txSig = await connection.sendTransaction(tx)
         console.log("TX SIG: ", txSig);
     })
