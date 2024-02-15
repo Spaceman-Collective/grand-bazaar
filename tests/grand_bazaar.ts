@@ -5,10 +5,11 @@ import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-me
 import { randomU64 } from "./util";
 import { readFileSync } from 'fs';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { serializeUint64, ByteifyEndianess } from "byteify";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
 
-const program: Program<GrandBazaar> = new Program<GrandBazaar>(IDL, "492EodhvjLq63FAsEKYtuULsKec1nmF2K526MBWrTBSz", { connection })
+const program: Program<GrandBazaar> = new Program<GrandBazaar>(IDL, "BXNayNJzpQoWuAmXbj5gVMAAxVR8HqZWCtokuZM3kVAZ", { connection })
 
 const SIGNER = web3.Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync('./keypairs/testing_pair.json').toString())));
 console.log("Using signer: ", SIGNER.publicKey.toString());
@@ -16,8 +17,7 @@ connection.requestAirdrop(SIGNER.publicKey, 100 * web3.LAMPORTS_PER_SOL);
 
 describe("grand_bazaar", () => {
     const gameId = randomU64();
-    const gameIdBuffer: Buffer = Buffer.alloc(8);
-    gameIdBuffer.writeBigUInt64LE(gameId, 0);
+    const gameIdBuffer = Uint8Array.from(serializeUint64(gameId, { endianess: ByteifyEndianess.LITTLE_ENDIAN }));
     const MPLProgram = new web3.PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString());
     const gameMintKey = web3.Keypair.generate();
 
@@ -54,7 +54,7 @@ describe("grand_bazaar", () => {
         )[0];
 
         const metadata = {
-            gameId: new BN(gameIdBuffer),
+            gameId: new BN(gameId.toString()),
             name: "Legends of the Sun",
             symbol: "LOTS",
             uri: "https://example.com/game_metadata.json"
@@ -72,7 +72,7 @@ describe("grand_bazaar", () => {
             masterEditionAccount: masterEditionAccountAddress,
             token: tokenAccountAddress,
             ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            sysvarAccount: web3.SYSVAR_INSTRUCTIONS_PUBKEY
+            sysvarAccount: new web3.PublicKey("Sysvar1111111111111111111111111111111111111")
         })
             .instruction();
 
@@ -88,6 +88,7 @@ describe("grand_bazaar", () => {
 
         const tx = new web3.VersionedTransaction(msg);
         tx.sign([SIGNER, gameMintKey])
+        console.log(Buffer.from(tx.serialize()).toString("base64"));
         const txSig = await connection.sendTransaction(tx)
         console.log("TX SIG: ", txSig);
     })

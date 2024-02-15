@@ -32,15 +32,14 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .update_authority(&ctx.accounts.game.to_account_info(), true)
         .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
         .system_program(&ctx.accounts.system_program)
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
+        //.sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
         .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
         .token_standard(TokenStandard::NonFungible)
         .uri(metadata.uri)
         .name(metadata.name)
         .seller_fee_basis_points(0)
         .print_supply(PrintSupply::Zero)
-        .invoke_signed(signer_seeds)
-        .unwrap();
+        .invoke_signed(signer_seeds)?;
 
     // Mints the NFT to the Game PDA
     MintV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
@@ -52,7 +51,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .payer(&ctx.accounts.signer)
         .authority(&ctx.accounts.game.to_account_info())
         .system_program(&ctx.accounts.system_program.to_account_info())
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
+        //.sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
         .spl_token_program(&ctx.accounts.token_program.to_account_info())
         .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
         .amount(1)
