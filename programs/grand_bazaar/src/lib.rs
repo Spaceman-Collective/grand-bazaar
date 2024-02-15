@@ -4,7 +4,7 @@ mod state;
 use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
-declare_id!("492EodhvjLq63FAsEKYtuULsKec1nmF2K526MBWrTBSz");
+declare_id!("5ZhBy9CMXi79wYDyeF8Jqa7X4WJD4BQMzmrSvAojMwW8");
 
 #[program]
 pub mod grand_bazaar {
