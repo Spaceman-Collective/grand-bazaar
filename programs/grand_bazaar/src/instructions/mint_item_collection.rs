@@ -93,7 +93,16 @@ pub struct MintItemCollection<'info> {
 
     // Metadata
     /// CHECK: Metadata program will create it
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            b"metadata".as_ref(),
+            mpl_program.key().as_ref(),
+            mint.key().as_ref(),
+        ],
+        bump,
+        seeds::program = mpl_program.key()
+    )]
     pub metadata_account: UncheckedAccount<'info>,
 
     /// CHECK: This is a program. and we check it. gud comment

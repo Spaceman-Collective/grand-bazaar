@@ -5,7 +5,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-grand_bazaar = "4zoGXwqMyi3ndEGqQ8gDmnmoptbRq78hGX7erA3DBs3K"
+grand_bazaar = "BXNayNJzpQoWuAmXbj5gVMAAxVR8HqZWCtokuZM3kVAZ"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
