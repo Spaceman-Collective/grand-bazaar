@@ -18,11 +18,9 @@ use mpl_token_metadata::instructions::{
 
 pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     // Create game pda and signer
-    msg!("Testing 123");
     ctx.accounts.game.game_id = metadata.game_id;
     ctx.accounts.game.authority = ctx.accounts.signer.key();
 
-    msg!("Setting signer seeds");
     let gid = metadata.game_id.to_le_bytes();
     // Create game collection metadata
     let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
@@ -43,7 +41,6 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     )
     .unwrap();
 
-    msg!("Creating metadata");
     // Create Metadata
     CreateMetadataAccountV3Cpi::new(
         &ctx.accounts.mpl_program.to_account_info(),
@@ -71,8 +68,6 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         },
     )
     .invoke_signed(signer_seeds)?;
-
-    msg!("{:?}", metadata);
 
     // Create Master Edition
     CreateMasterEditionV3Cpi::new(

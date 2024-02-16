@@ -1,11 +1,15 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{Mint, Token, TokenAccount},
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
 };
 use mpl_token_metadata::{
-    instructions::{CreateV1CpiBuilder, MintV1CpiBuilder},
-    types::{Collection, PrintSupply, TokenStandard},
+    instructions::{
+        CreateMasterEditionV3Cpi, CreateMasterEditionV3CpiAccounts,
+        CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3Cpi,
+        CreateMetadataAccountV3CpiAccounts, CreateMetadataAccountV3InstructionArgs,
+    },
+    types::{Collection, DataV2},
     ID as MPL_TOKEN_METADATA_ID,
 };
 
@@ -20,48 +24,74 @@ pub fn handler(
 ) -> Result<()> {
     let gid = game_id.to_le_bytes();
     // Create game collection metadata
-    let game_setting_seeds: &[&[u8]] = &[gid.as_ref(), &[ctx.bumps.game]];
-    let signer_seeds = &[game_setting_seeds];
+    let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
+    let signer_seeds = &[&seeds[..]];
 
-    // Creates metadata, master edition, and mints to
-    CreateV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
-        .metadata(&ctx.accounts.metadata_account.to_account_info())
-        .mint(&ctx.accounts.mint.to_account_info(), false)
-        .authority(&ctx.accounts.game.to_account_info())
-        .payer(&ctx.accounts.signer.to_account_info())
-        .update_authority(&ctx.accounts.game.to_account_info(), true)
-        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
-        .system_program(&ctx.accounts.system_program)
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
-        .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
-        .token_standard(TokenStandard::NonFungible)
-        .collection(Collection {
-            verified: true,
-            key: ctx.accounts.game_collection_mint.key(),
-        })
-        .uri(metadata.uri)
-        .name(metadata.name)
-        .seller_fee_basis_points(0)
-        .print_supply(PrintSupply::Zero)
-        .invoke_signed(signer_seeds)
-        .unwrap();
+    // Mint Token
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.game_ata.to_account_info(),
+                authority: ctx.accounts.game.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        1,
+    )
+    .unwrap();
 
-    // Mints the NFT to the Game PDA
-    MintV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
-        .token(&ctx.accounts.token.to_account_info())
-        .token_owner(Some(&ctx.accounts.game.to_account_info()))
-        .metadata(&ctx.accounts.metadata_account.to_account_info())
-        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
-        .mint(&ctx.accounts.mint.to_account_info())
-        .payer(&ctx.accounts.signer)
-        .authority(&ctx.accounts.game.to_account_info())
-        .system_program(&ctx.accounts.system_program.to_account_info())
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
-        .spl_token_program(&ctx.accounts.token_program.to_account_info())
-        .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
-        .amount(1)
-        .invoke_signed(signer_seeds)?;
+    // Create Metadata
+    CreateMetadataAccountV3Cpi::new(
+        &ctx.accounts.mpl_program.to_account_info(),
+        CreateMetadataAccountV3CpiAccounts {
+            payer: &ctx.accounts.signer.to_account_info(),
+            metadata: &ctx.accounts.metadata_account.to_account_info(),
+            mint: &ctx.accounts.mint.to_account_info(),
+            mint_authority: &ctx.accounts.game.to_account_info(),
+            update_authority: (&ctx.accounts.game.to_account_info(), true),
+            system_program: &ctx.accounts.system_program.to_account_info(),
+            rent: None,
+        },
+        CreateMetadataAccountV3InstructionArgs {
+            data: DataV2 {
+                name: metadata.name.to_string().clone(),
+                symbol: metadata.symbol.to_string().clone(),
+                seller_fee_basis_points: 0,
+                creators: None,
+                uri: metadata.uri.to_string().clone().to_string(),
+                collection: Some(Collection {
+                    verified: true,
+                    key: ctx.accounts.game_collection_mint.key(),
+                }),
+                uses: None,
+            },
+            is_mutable: false,
+            collection_details: None,
+        },
+    )
+    .invoke_signed(signer_seeds)?;
 
+    // Create Master Edition
+    CreateMasterEditionV3Cpi::new(
+        &ctx.accounts.mpl_program.to_account_info(),
+        CreateMasterEditionV3CpiAccounts {
+            edition: &ctx.accounts.master_edition_account.to_account_info(),
+            mint: &ctx.accounts.mint.to_account_info(),
+            update_authority: &ctx.accounts.game.to_account_info(),
+            mint_authority: &ctx.accounts.game.to_account_info(),
+            payer: &ctx.accounts.signer.to_account_info(),
+            metadata: &ctx.accounts.metadata_account.to_account_info(),
+            token_program: &ctx.accounts.token_program.to_account_info(),
+            system_program: &ctx.accounts.system_program.to_account_info(),
+            rent: Some(&ctx.accounts.rent_account.to_account_info()),
+        },
+        CreateMasterEditionV3InstructionArgs {
+            max_supply: Some(1),
+        },
+    )
+    .invoke_signed(signer_seeds)?;
     Ok(())
 }
 
@@ -73,21 +103,19 @@ pub struct MintItemCollection<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
+        init,
+        payer = signer,
+        space = 8 + GamePDA::get_max_size(),
         seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
         bump,
     )]
-    pub game: Box<Account<'info, GamePDA>>,
-    pub game_collection_mint: Box<Account<'info, Mint>>,
+    pub game: Account<'info, GamePDA>,
+    pub game_collection_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub game_ata: Account<'info, TokenAccount>,
 
-    // SPL Mint - Random Keypair generation
-    #[account(
-        init,
-        payer=signer,
-        mint::decimals = 0,
-        mint::authority = game,
-        mint::freeze_authority = game
-    )]
-    pub mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
 
     // Metadata
@@ -97,10 +125,10 @@ pub struct MintItemCollection<'info> {
 
     /// CHECK: This is a program. and we check it. gud comment
     #[account(address = MPL_TOKEN_METADATA_ID)]
-    pub mpl_program: UncheckedAccount<'info>,
-
-    /// CHECK: This is a program. and we check it. gud comment
-    pub sysvar_account: UncheckedAccount<'info>,
+    pub mpl_program: AccountInfo<'info>,
+    pub rent_account: Sysvar<'info, Rent>,
+    /// CHECK: sysvar
+    pub sysvar_instructions: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -117,7 +145,6 @@ pub struct MintItemCollection<'info> {
     pub master_edition_account: UncheckedAccount<'info>,
 
     // Minting NFT
-    pub token: Account<'info, TokenAccount>,
     pub ata_program: Program<'info, AssociatedToken>,
 }
 
