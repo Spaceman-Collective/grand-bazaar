@@ -73,8 +73,9 @@ pub struct MintItemAccount<'info> {
     )]
     pub game: Account<'info, GamePDA>,
     pub item_collection_mint: Account<'info, Mint>,
-    /// CHECK: Account
+    /// CHECK: Metaplex Metadata Acc
     pub item_collection_metadata: AccountInfo<'info>,
+    /// CHECK: Metaplex Master Edition Acc
     pub item_collection_edition: AccountInfo<'info>,
 
     // Mint Bubblegum NFT
