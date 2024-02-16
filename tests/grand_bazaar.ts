@@ -72,7 +72,9 @@ describe("grand_bazaar", () => {
             masterEditionAccount: masterEditionAccountAddress,
             token: tokenAccountAddress,
             ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            sysvarAccount: new web3.PublicKey("Sysvar1111111111111111111111111111111111111")
+            sysvarInstructions: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            rentAccount: web3.SYSVAR_RENT_PUBKEY,
+            //new web3.PublicKey("Sysvar1111111111111111111111111111111111111")
         })
             .instruction();
 
