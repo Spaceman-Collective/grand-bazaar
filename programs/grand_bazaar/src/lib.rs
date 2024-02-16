@@ -25,8 +25,12 @@ pub mod grand_bazaar {
         Ok(())
     }
 
-    pub fn mint_item_account(ctx: Context<MintItemAccount>) -> Result<()> {
-        mint_item_account::handler(ctx).unwrap();
+    pub fn mint_item_account(
+        ctx: Context<MintItemAccount>,
+        game_id: u64,
+        init_data: Vec<u8>,
+    ) -> Result<()> {
+        mint_item_account::handler(ctx, game_id, init_data).unwrap();
         Ok(())
     }
 

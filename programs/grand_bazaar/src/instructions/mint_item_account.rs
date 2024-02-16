@@ -60,7 +60,7 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
 }
 
 #[derive(Accounts)]
-#[instruction(game_id:u64)]
+#[instruction(game_id:u64, init_data: Vec<u8>)]
 pub struct MintItemAccount<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
