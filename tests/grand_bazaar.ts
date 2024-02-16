@@ -4,7 +4,7 @@ const IDL = require("../target/idl/grand_bazaar.json");
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { randomU64 } from "./util";
 import { readFileSync } from 'fs';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { serializeUint64, ByteifyEndianess } from "byteify";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
@@ -16,10 +16,10 @@ console.log("Using signer: ", SIGNER.publicKey.toString());
 connection.requestAirdrop(SIGNER.publicKey, 100 * web3.LAMPORTS_PER_SOL);
 
 describe("grand_bazaar", () => {
-    const gameId = randomU64();
+    const gameId = BigInt(10); //randomU64();
     const gameIdBuffer = Uint8Array.from(serializeUint64(gameId, { endianess: ByteifyEndianess.LITTLE_ENDIAN }));
     const MPLProgram = new web3.PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString());
-    const gameMintKey = web3.Keypair.generate();
+
 
     it("initializes a game", async () => {
         await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for airdrop to go through
@@ -27,12 +27,14 @@ describe("grand_bazaar", () => {
             [Buffer.from("game"), gameIdBuffer],
             program.programId
         )[0];
+        const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
+        const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
 
         const masterEditionAccountAddress = web3.PublicKey.findProgramAddressSync(
             [
                 Buffer.from("metadata"),
                 MPLProgram.toBuffer(),
-                gameMintKey.publicKey.toBuffer(),
+                gameMintKey.toBuffer(),
                 Buffer.from("edition")
             ],
             MPLProgram
@@ -42,7 +44,7 @@ describe("grand_bazaar", () => {
             [
                 Buffer.from("metadata"),
                 MPLProgram.toBuffer(),
-                gameMintKey.publicKey.toBuffer()
+                gameMintKey.toBuffer()
             ],
             MPLProgram
         )[0];
@@ -65,16 +67,15 @@ describe("grand_bazaar", () => {
             signer: SIGNER.publicKey,
             systemProgram: web3.SystemProgram.programId,
             game: gamePdaAddress,
-            mint: gameMintKey.publicKey,
+            mint: gameMintKey,
             tokenProgram: TOKEN_PROGRAM_ID,
             metadataAccount: nftMetadataAccountAddress,
             mplProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
             masterEditionAccount: masterEditionAccountAddress,
-            token: tokenAccountAddress,
             ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             sysvarInstructions: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
             rentAccount: web3.SYSVAR_RENT_PUBKEY,
-            //new web3.PublicKey("Sysvar1111111111111111111111111111111111111")
+            gameAta: gameATA
         })
             .instruction();
 
@@ -89,7 +90,7 @@ describe("grand_bazaar", () => {
         }).compileToV0Message();
 
         const tx = new web3.VersionedTransaction(msg);
-        tx.sign([SIGNER, gameMintKey])
+        tx.sign([SIGNER])
         console.log(Buffer.from(tx.serialize()).toString("base64"));
         console.log(await connection.simulateTransaction(tx));
         const txSig = await connection.sendTransaction(tx)

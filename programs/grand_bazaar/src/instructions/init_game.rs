@@ -1,13 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{Mint, Token, TokenAccount},
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
 };
 use mpl_token_metadata::{
-    instructions::{
-        CreateMasterEditionV3CpiAccounts, CreateMasterEditionV3InstructionArgs, MintV1Cpi,
-        MintV1CpiAccounts, MintV1InstructionArgs,
-    },
+    instructions::{CreateMasterEditionV3CpiAccounts, CreateMasterEditionV3InstructionArgs},
     types::DataV2,
     ID as MPL_TOKEN_METADATA_ID,
 };
@@ -21,15 +18,32 @@ use mpl_token_metadata::instructions::{
 
 pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     // Create game pda and signer
-    let game = &mut ctx.accounts.game;
-    game.game_id = metadata.game_id;
-    game.authority = ctx.accounts.signer.key();
+    msg!("Testing 123");
+    ctx.accounts.game.game_id = metadata.game_id;
+    ctx.accounts.game.authority = ctx.accounts.signer.key();
 
+    msg!("Setting signer seeds");
     let gid = metadata.game_id.to_le_bytes();
     // Create game collection metadata
-    let game_setting_seeds: &[&[u8]] = &[gid.as_ref(), &[ctx.bumps.game]];
-    let signer_seeds = &[game_setting_seeds];
+    let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
+    let signer_seeds = &[&seeds[..]];
 
+    // Mint Token
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.game_ata.to_account_info(),
+                authority: ctx.accounts.game.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        1,
+    )
+    .unwrap();
+
+    msg!("Creating metadata");
     // Create Metadata
     CreateMetadataAccountV3Cpi::new(
         &ctx.accounts.mpl_program.to_account_info(),
@@ -38,17 +52,17 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
             metadata: &ctx.accounts.metadata_account.to_account_info(),
             mint: &ctx.accounts.mint.to_account_info(),
             mint_authority: &ctx.accounts.game.to_account_info(),
-            update_authority: (&ctx.accounts.game.to_account_info(), false),
+            update_authority: (&ctx.accounts.game.to_account_info(), true),
             system_program: &ctx.accounts.system_program.to_account_info(),
-            rent: Some(&ctx.accounts.rent_account.to_account_info()),
+            rent: None,
         },
         CreateMetadataAccountV3InstructionArgs {
             data: DataV2 {
-                name: metadata.name,
-                symbol: metadata.symbol,
+                name: metadata.name.to_string().clone(),
+                symbol: metadata.symbol.to_string().clone(),
                 seller_fee_basis_points: 0,
                 creators: None,
-                uri: metadata.uri,
+                uri: metadata.uri.to_string().clone().to_string(),
                 collection: None,
                 uses: None,
             },
@@ -57,6 +71,9 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         },
     )
     .invoke_signed(signer_seeds)?;
+
+    msg!("{:?}", metadata);
+
     // Create Master Edition
     CreateMasterEditionV3Cpi::new(
         &ctx.accounts.mpl_program.to_account_info(),
@@ -71,72 +88,11 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
             system_program: &ctx.accounts.system_program.to_account_info(),
             rent: Some(&ctx.accounts.rent_account.to_account_info()),
         },
-        CreateMasterEditionV3InstructionArgs { max_supply: None },
-    )
-    .invoke_signed(signer_seeds)?;
-
-    MintV1Cpi::new(
-        &ctx.accounts.mpl_program.to_account_info(),
-        MintV1CpiAccounts {
-            token: &ctx.accounts.token.to_account_info(),
-            token_owner: Some(&ctx.accounts.game.to_account_info()),
-            metadata: &ctx.accounts.metadata_account.to_account_info(),
-            master_edition: Some(&ctx.accounts.master_edition_account.to_account_info()),
-            token_record: None,
-            mint: &ctx.accounts.mint.to_account_info(),
-            authority: &ctx.accounts.game.to_account_info(),
-            delegate_record: None,
-            payer: &ctx.accounts.signer.to_account_info(),
-            system_program: &ctx.accounts.system_program.to_account_info(),
-            sysvar_instructions: &ctx.accounts.sysvar_instructions.to_account_info(),
-            spl_token_program: &ctx.accounts.token_program.to_account_info(),
-            spl_ata_program: &ctx.accounts.ata_program.to_account_info(),
-            authorization_rules: None,
-            authorization_rules_program: None,
-        },
-        MintV1InstructionArgs {
-            amount: 1,
-            authorization_data: None,
+        CreateMasterEditionV3InstructionArgs {
+            max_supply: Some(1),
         },
     )
     .invoke_signed(signer_seeds)?;
-
-    // Mint Token
-    /*
-    // Creates metadata, master edition
-    CreateV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
-        .metadata(&ctx.accounts.metadata_account.to_account_info())
-        .mint(&ctx.accounts.mint.to_account_info(), false)
-        .authority(&ctx.accounts.game.to_account_info())
-        .payer(&ctx.accounts.signer.to_account_info())
-        .update_authority(&ctx.accounts.game.to_account_info(), true)
-        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
-        .system_program(&ctx.accounts.system_program)
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
-        .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
-        .token_standard(TokenStandard::NonFungible)
-        .uri(metadata.uri)
-        .name(metadata.name)
-        .seller_fee_basis_points(0)
-        .print_supply(PrintSupply::Zero)
-        .invoke_signed(signer_seeds)?;
-
-    // Mints the NFT to the Game PDA
-    MintV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
-        .token(&ctx.accounts.token.to_account_info())
-        .token_owner(Some(&ctx.accounts.game.to_account_info()))
-        .metadata(&ctx.accounts.metadata_account.to_account_info())
-        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
-        .mint(&ctx.accounts.mint.to_account_info())
-        .payer(&ctx.accounts.signer)
-        .authority(&ctx.accounts.game.to_account_info())
-        .system_program(&ctx.accounts.system_program.to_account_info())
-        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
-        .spl_token_program(&ctx.accounts.token_program.to_account_info())
-        .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
-        .amount(1)
-        .invoke_signed(signer_seeds)?;
-     */
     Ok(())
 }
 
@@ -155,15 +111,10 @@ pub struct InitGame<'info> {
         bump,
     )]
     pub game: Account<'info, GamePDA>,
+    #[account(mut)]
+    pub game_ata: Account<'info, TokenAccount>,
 
-    // SPL Mint - Random Keypair generation
-    #[account(
-        init,
-        payer=signer,
-        mint::decimals = 0,
-        mint::authority = game,
-        mint::freeze_authority = game
-    )]
+    #[account(mut)]
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
 
@@ -174,8 +125,6 @@ pub struct InitGame<'info> {
 
     /// CHECK: This is a program. and we check it. gud comment
     #[account(address = MPL_TOKEN_METADATA_ID)]
-
-    /// CHECK: This is a program. and we check it. gud comment
     pub mpl_program: AccountInfo<'info>,
     pub rent_account: Sysvar<'info, Rent>,
     /// CHECK: sysvar
@@ -196,19 +145,10 @@ pub struct InitGame<'info> {
     pub master_edition_account: UncheckedAccount<'info>,
 
     // Minting NFT
-    #[account(
-        init,
-        seeds = [b"token", metadata.game_id.to_le_bytes().as_ref()],
-        bump,
-        payer = signer,
-        token::mint = mint,
-        token::authority = game.to_account_info(),
-    )]
-    pub token: Account<'info, TokenAccount>,
     pub ata_program: Program<'info, AssociatedToken>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct GameMetadata {
     pub game_id: u64,
     pub name: String,

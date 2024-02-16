@@ -8,7 +8,6 @@ use mpl_token_metadata::{
     types::{Collection, PrintSupply, TokenStandard},
     ID as MPL_TOKEN_METADATA_ID,
 };
-use solana_program::sysvar::ID as SysvarID;
 
 use crate::*;
 /**
@@ -101,9 +100,6 @@ pub struct MintItemCollection<'info> {
     pub mpl_program: UncheckedAccount<'info>,
 
     /// CHECK: This is a program. and we check it. gud comment
-    #[account(
-        address = SysvarID
-    )]
     pub sysvar_account: UncheckedAccount<'info>,
 
     #[account(

@@ -1,6 +1,5 @@
 use crate::*;
 use anchor_lang::prelude::*;
-use mpl_bubblegum::instructions::MintToCollectionV1CpiBuilder;
 
 pub fn handler(ctx: Context<MintItemAccount>) -> Result<()> {
     Ok(())
