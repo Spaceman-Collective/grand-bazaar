@@ -14,7 +14,7 @@ use crate::*;
 
 pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     // Create game pda and signer
-    let game: &mut Account<'_, GamePDA> = &mut ctx.accounts.game;
+    let game = &mut ctx.accounts.game;
     game.game_id = metadata.game_id;
     game.authority = ctx.accounts.signer.key();
 
@@ -32,7 +32,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .update_authority(&ctx.accounts.game.to_account_info(), true)
         .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
         .system_program(&ctx.accounts.system_program)
-        //.sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
+        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
         .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
         .token_standard(TokenStandard::NonFungible)
         .uri(metadata.uri)
@@ -51,7 +51,7 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
         .payer(&ctx.accounts.signer)
         .authority(&ctx.accounts.game.to_account_info())
         .system_program(&ctx.accounts.system_program.to_account_info())
-        //.sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
+        .sysvar_instructions(&ctx.accounts.sysvar_account.to_account_info())
         .spl_token_program(&ctx.accounts.token_program.to_account_info())
         .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
         .amount(1)
@@ -96,7 +96,7 @@ pub struct InitGame<'info> {
     #[account(address = MPL_TOKEN_METADATA_ID)]
 
     /// CHECK: This is a program. and we check it. gud comment
-    pub mpl_program: UncheckedAccount<'info>,
+    pub mpl_program: AccountInfo<'info>,
     #[account(
         address = SysvarID
     )]

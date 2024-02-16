@@ -89,6 +89,7 @@ describe("grand_bazaar", () => {
         const tx = new web3.VersionedTransaction(msg);
         tx.sign([SIGNER, gameMintKey])
         console.log(Buffer.from(tx.serialize()).toString("base64"));
+        console.log(await connection.simulateTransaction(tx));
         const txSig = await connection.sendTransaction(tx)
         console.log("TX SIG: ", txSig);
     })

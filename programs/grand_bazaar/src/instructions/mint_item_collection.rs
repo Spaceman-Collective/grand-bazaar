@@ -77,8 +77,8 @@ pub struct MintItemCollection<'info> {
         seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
         bump,
     )]
-    pub game: Account<'info, GamePDA>,
-    pub game_collection_mint: Account<'info, Mint>,
+    pub game: Box<Account<'info, GamePDA>>,
+    pub game_collection_mint: Box<Account<'info, Mint>>,
 
     // SPL Mint - Random Keypair generation
     #[account(
@@ -88,7 +88,7 @@ pub struct MintItemCollection<'info> {
         mint::authority = game,
         mint::freeze_authority = game
     )]
-    pub mint: Account<'info, Mint>,
+    pub mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
 
     // Metadata
