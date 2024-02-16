@@ -7,6 +7,7 @@ import { readFileSync } from 'fs';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { serializeUint64, ByteifyEndianess } from "byteify";
 import initializeGame from "./initialize_game";
+import mintItemAccount from "./mint_item_account";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
 
@@ -24,5 +25,9 @@ describe("grand_bazaar", () => {
 
     it("initializes a game", async () => {
       initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
+    })
+
+    it("init an item account", async () => {
+      mintItemAccount({ gameId, SIGNER, connection, MPLProgram, itemCollectionMint, itemCollectionMetadata, itemCollectionEdition, gameIdBuffer, program });
     })
 });
