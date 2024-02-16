@@ -8,6 +8,8 @@
         "@metaplex-foundation/mpl-bubblegum": "^3.1.2",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",
+        "@metaplex-foundation/umi-bundle-defaults": "^0.9.1",
+        "@solana/spl-account-compression": "^0.2.0",
         "bn.js": "^5.2.1",
         "bs58": "^5.0.0",
         "byteify": "^4.1.4"
