@@ -103,9 +103,6 @@ pub struct MintItemCollection<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
-        init,
-        payer = signer,
-        space = 8 + GamePDA::get_max_size(),
         seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
         bump,
     )]

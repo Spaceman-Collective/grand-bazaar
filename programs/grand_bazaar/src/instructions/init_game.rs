@@ -22,9 +22,10 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
     ctx.accounts.game.authority = ctx.accounts.signer.key();
 
     let gid = metadata.game_id.to_le_bytes();
-    // Create game collection metadata
     let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
     let signer_seeds = &[&seeds[..]];
+
+    // Create game collection metadata
 
     // Mint Token
     mint_to(

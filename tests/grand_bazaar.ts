@@ -96,6 +96,4 @@ describe("grand_bazaar", () => {
         const txSig = await connection.sendTransaction(tx)
         console.log("TX SIG: ", txSig);
     })
-
-
-})
+});
