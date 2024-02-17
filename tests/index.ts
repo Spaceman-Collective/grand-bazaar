@@ -26,6 +26,7 @@ describe("grand_bazaar", () => {
   const MPLProgram = new web3.PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString());
 
   let game: InitializedGameType; // to reference later throughout the tests
+  let colle
 
   before(async () => {
     game = await initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
