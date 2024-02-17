@@ -1,4 +1,5 @@
 import { BN, Program, web3 } from "@coral-xyz/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { GrandBazaar } from "../target/types/grand_bazaar";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
@@ -19,9 +20,14 @@ const initializeGame = async (
         [Buffer.from("game"), gameIdBuffer],
         program.programId
     )[0];
+    // const gameMintKey = web3.PublicKey.findProgramAddressSync(
+    //     [Buffer.from("mint"), gameIdBuffer],
+    //     program.programId
+    // )[0];
+    // const gameMintKey: anchor.web3.Keypair = anchor.web3.Keypair.generate();
     const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
-    const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
-  console.log("game ata account made");
+    // const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
+    // console.log("game ata account made");
 
     const masterEditionAccountAddress = web3.PublicKey.findProgramAddressSync(
         [
@@ -42,11 +48,15 @@ const initializeGame = async (
         MPLProgram
     )[0];
 
-    // Derive the token account address for the token mint
-    const tokenAccountAddress = web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("token"), gameIdBuffer],
+    // Derive the token account address for the item tokenaccount
+    const gameATA = web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("token"), 
+          gameIdBuffer,
+          gameMintKey.toBuffer()
+        ],
         program.programId
-    )[0];
+      )[0];
 
     const metadata = {
         gameId: new BN(gameId.toString()),
@@ -90,7 +100,11 @@ const initializeGame = async (
     // console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx)
   // console.log("TX SIG: ", txSig);
-  return { gameMintKey, gameATA, gamePdaAddress };
+  return {
+    gameMintKey: gameMintKey,
+    gameATA: gameATA,
+    gamePdaAddress: gamePdaAddress
+  };
 }
 
 export default initializeGame;  

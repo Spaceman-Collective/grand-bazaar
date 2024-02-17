@@ -98,9 +98,19 @@ pub fn handler(
 #[derive(Accounts)]
 #[instruction(game_id: u64, metadata:GameMetadata)]
 pub struct MintItemCollection<'info> {
+    #[account(
+        init,
+        payer = signer,
+        mint::decimals = 0,
+        mint::authority = game,
+        mint::freeze_authority = game,
+    )]
+    pub mint: Account<'info, Mint>,
+
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 
     #[account(
         seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
@@ -108,12 +118,16 @@ pub struct MintItemCollection<'info> {
     )]
     pub game: Account<'info, GamePDA>,
     pub game_collection_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub item_ata: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
+    #[account(
+        init,
+        payer = signer,
+        seeds = [b"token".as_ref(), metadata.game_id.to_le_bytes().as_ref(), &(mint.key().as_ref()),],
+        bump,
+        token::mint = mint,
+        token::authority = game.to_account_info(),
+    )]
+    pub item_ata: Account<'info, TokenAccount>,
 
     // Metadata
     /// CHECK: Metadata program will create it

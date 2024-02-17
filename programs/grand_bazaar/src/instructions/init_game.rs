@@ -95,10 +95,6 @@ pub fn handler(ctx: Context<InitGame>, metadata: GameMetadata) -> Result<()> {
 #[derive(Accounts)]
 #[instruction(metadata:GameMetadata)]
 pub struct InitGame<'info> {
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-
     #[account(
         init,
         payer = signer,
@@ -107,11 +103,25 @@ pub struct InitGame<'info> {
         bump,
     )]
     pub game: Account<'info, GamePDA>,
-    #[account(mut)]
+
+    #[account(
+        mut
+    )]
+    pub mint: Account<'info, Mint>,
+
+    #[account(
+        init,
+        payer = signer,
+        seeds = [b"token".as_ref(), metadata.game_id.to_le_bytes().as_ref(), &(mint.key().as_ref()),],
+        bump,
+        token::mint = mint,
+        token::authority = game.to_account_info(),
+    )]
     pub game_ata: Account<'info, TokenAccount>,
 
     #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 
     // Metadata
