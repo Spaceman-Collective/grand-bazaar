@@ -7,9 +7,10 @@ import { readFileSync } from 'fs';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { serializeUint64, ByteifyEndianess } from "byteify";
 import initializeGame from "./initialize_game";
-import { InitializedGameType } from "./types";
+import { InitializedGameType, MintedCollection } from "./types";
 import { assert, expect } from "chai";
 import mintItemCollection from "./mint_item_collection";
+import mintItemAccount from "./mint_item_account";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
 
@@ -26,7 +27,7 @@ describe("grand_bazaar", () => {
   const MPLProgram = new web3.PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString());
 
   let game: InitializedGameType; // to reference later throughout the tests
-  let colle
+  let collection: MintedCollection;
 
   before(async () => {
     game = await initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
@@ -36,12 +37,19 @@ describe("grand_bazaar", () => {
     expect(game).to.exist;
   });
 
-  it("mint item collection", async () => {
-    await mintItemCollection({ connection, SIGNER, game, gameId, MPLProgram, program });
+  
+
+  before(async () => {
+    collection = await mintItemCollection({ connection, SIGNER, game, gameId, MPLProgram, program });
+
   });
 
-  // it("init an item account", async () => {
-  //   mintItemAccount({ gameId, SIGNER, connection, MPLProgram, itemCollectionMint, itemCollectionMetadata, itemCollectionEdition, gameIdBuffer, program });
-  // });
+  it("mint item collection", () => {
+    expect(collection).to.exist;
+  });
+
+  it("init an item account", async () => {
+    await mintItemAccount({ gameId, SIGNER, connection, collection , gameIdBuffer, program });
+  });
 
 });

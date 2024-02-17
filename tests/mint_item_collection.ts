@@ -75,7 +75,7 @@ const mintItemCollection = async (
     // console.log(await connection.simulateTransaction(tx));
   const txSig = await connection.sendTransaction(tx);
   
-  return { itemMintKey, itemMetaData: metadataAccount, itemMasterAddition: masterEditionAccountAddress }
+  return { mintKey: itemMintKey, metadataAccount, masterEditionAccount: masterEditionAccountAddress }
 }
 
 export default mintItemCollection;
