@@ -1,0 +1,6 @@
+table CompressedTokenAccount {
+    collection_id: [ubyte];
+    amount: ulong;
+}
+
+root_type CompressedTokenAccount;
