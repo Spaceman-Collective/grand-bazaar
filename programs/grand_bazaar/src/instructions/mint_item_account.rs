@@ -11,16 +11,17 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
     let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
     let signer_seeds = &[&seeds[..]];
 
-    let metadata_borrow = ctx.accounts.item_collection_metadata.data.borrow_mut();
-    let metadata_ref = &mut &**metadata_borrow;
-    let item_metadata = Metadata::deserialize(metadata_ref).unwrap();
-    
+    let ds_data= ctx.accounts.item_collection_metadata.try_borrow_data()?;
     // TODO check that the init_data can be deserialized 
-    // let item_metadata = Metadata::try_from_slice(ds_data).unwrap();
+    let item_metadata = Metadata::safe_deserialize(&ds_data)?;
     let data_str = init_data.iter().map(|&b| b.to_string()).collect::<Vec<_>>().join(",");
     if data_str.len() > 199 {
         return err!(MintItemAccountErrors::InitDataLenExceedsMaxSize)
     }
+
+    drop(ds_data);
+
+    msg!("Post metadata");
 
     // Mint Item Account
     MintToCollectionV1Cpi::new(
@@ -77,8 +78,10 @@ pub struct MintItemAccount<'info> {
         bump,
     )]
     pub game: Account<'info, GamePDA>,
+
     pub item_collection_mint: Account<'info, Mint>,
     /// CHECK: Metaplex Metadata Acc
+    #[account(mut)]
     pub item_collection_metadata: AccountInfo<'info>,
     /// CHECK: Metaplex Master Edition Acc
     pub item_collection_edition: AccountInfo<'info>,
@@ -90,6 +93,7 @@ pub struct MintItemAccount<'info> {
         seeds::program = bubblegum_program.key()
       )]
     /// CHECK: This account is neither written to nor read from.
+    #[account(mut)]
     pub tree_authority: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub new_leaf_owner: UncheckedAccount<'info>, // receiver
