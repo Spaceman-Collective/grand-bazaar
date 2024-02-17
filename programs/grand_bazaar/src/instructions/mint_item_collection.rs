@@ -1,12 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+};
 use mpl_token_metadata::{
+    accounts::MasterEdition,
     instructions::{
         CreateMasterEditionV3Cpi, CreateMasterEditionV3CpiAccounts,
         CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3Cpi,
         CreateMetadataAccountV3CpiAccounts, CreateMetadataAccountV3InstructionArgs,
+        CreateV1CpiBuilder, MintV1CpiBuilder,
     },
-    types::{Collection, DataV2},
+    types::{Collection, CollectionDetails, DataV2, PrintSupply, TokenStandard},
     ID as MPL_TOKEN_METADATA_ID,
 };
 
@@ -24,6 +29,45 @@ pub fn handler(
     let seeds = &[b"game".as_ref(), &gid, &[ctx.bumps.game]];
     let signer_seeds = &[&seeds[..]];
 
+    CreateV1CpiBuilder::new(&ctx.accounts.mpl_program.to_account_info())
+        .metadata(&ctx.accounts.metadata_account.to_account_info())
+        .mint(&ctx.accounts.mint.to_account_info(), false)
+        .authority(&ctx.accounts.game.to_account_info())
+        .payer(&ctx.accounts.signer.to_account_info())
+        .update_authority(&ctx.accounts.game.to_account_info(), true)
+        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
+        .system_program(&ctx.accounts.system_program.to_account_info())
+        .sysvar_instructions(&ctx.accounts.sysvar_instructions.to_account_info())
+        .spl_token_program(Some(&ctx.accounts.token_program.to_account_info()))
+        .token_standard(TokenStandard::NonFungible)
+        .name(metadata.name)
+        .uri(metadata.uri)
+        .seller_fee_basis_points(0)
+        .token_standard(TokenStandard::NonFungible)
+        .collection(Collection {
+            verified: false,
+            key: ctx.accounts.game_collection_mint.key(),
+        })
+        .collection_details(CollectionDetails::V1 { size: 1 })
+        .print_supply(PrintSupply::Zero)
+        .invoke_signed(signer_seeds)?;
+
+    MintV1CpiBuilder::new(&ctx.accounts.token_program.to_account_info())
+        .token(&ctx.accounts.item_ata.to_account_info())
+        .token_owner(Some(&ctx.accounts.game.to_account_info()))
+        .metadata(&ctx.accounts.metadata_account.to_account_info())
+        .master_edition(Some(&ctx.accounts.master_edition_account.to_account_info()))
+        .mint(&ctx.accounts.mint.to_account_info())
+        .payer(&ctx.accounts.signer.to_account_info())
+        .authority(&ctx.accounts.game.to_account_info())
+        .system_program(&ctx.accounts.system_program.to_account_info())
+        .sysvar_instructions(&ctx.accounts.sysvar_instructions.to_account_info())
+        .spl_token_program(&ctx.accounts.token_program.to_account_info())
+        .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
+        .amount(1)
+        .invoke_signed(signer_seeds)?;
+
+    /*
     // Mint Token
     mint_to(
         CpiContext::new_with_signer(
@@ -65,7 +109,7 @@ pub fn handler(
                 uses: None,
             },
             is_mutable: false,
-            collection_details: None,
+            collection_details: Some(CollectionDetails::V1 { size: 1 }),
         },
     )
     .invoke_signed(signer_seeds)?;
@@ -89,6 +133,7 @@ pub fn handler(
         },
     )
     .invoke_signed(signer_seeds)?;
+    */
     Ok(())
 }
 
@@ -111,6 +156,7 @@ pub struct MintItemCollection<'info> {
     #[account(mut)]
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
+    pub ata_program: Program<'info, AssociatedToken>,
 
     // Metadata
     /// CHECK: Metadata program will create it
