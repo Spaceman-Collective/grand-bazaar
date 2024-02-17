@@ -73,7 +73,8 @@ const mintItemCollection = async (
     tx.sign([SIGNER]);
     // console.log(Buffer.from(tx.serialize()).toString("base64"));
     // console.log(await connection.simulateTransaction(tx));
-    const txSig = await connection.sendTransaction(tx);
+  const txSig = await connection.sendTransaction(tx);
+  
 }
 
 export default mintItemCollection;
