@@ -62,7 +62,7 @@ pub fn handler(
                 creators: None,
                 uri: metadata.uri.to_string().clone().to_string(),
                 collection: Some(Collection {
-                    verified: true,
+                    verified: false,
                     key: ctx.accounts.game_collection_mint.key(),
                 }),
                 uses: None,
@@ -140,9 +140,6 @@ pub struct MintItemCollection<'info> {
       )]
     /// CHECK: IDK man this is some metaplex shit
     pub master_edition_account: UncheckedAccount<'info>,
-
-    // Minting NFT
-    pub ata_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
