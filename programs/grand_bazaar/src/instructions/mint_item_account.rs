@@ -11,7 +11,10 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
     let signer_seeds = &[&seeds[..]];
 
     // TODO check that the init_data can be deserialized 
-    let item_metadata = Metadata::try_from_slice(&ctx.accounts.item_collection_metadata.data.try_borrow().unwrap()).unwrap();
+    let metadata_borrow = ctx.accounts.item_collection_metadata.data.borrow_mut();
+    let metadata_ref = &mut &**metadata_borrow;
+    let item_metadata = Metadata::deserialize(metadata_ref).unwrap();
+    
     let data_str = init_data.iter().map(|&b| b.to_string()).collect::<Vec<_>>().join(",");
     if data_str.len() > 199 {
         return err!(MintItemAccountErrors::InitDataLenExceedsMaxSize)

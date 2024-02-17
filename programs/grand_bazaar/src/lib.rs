@@ -1,13 +1,17 @@
 mod instructions;
+mod schemas;
 mod state;
 
 use anchor_lang::prelude::*;
 use instructions::*;
+use mpl_bubblegum::types::MetadataArgs;
 use state::*;
+
 declare_id!("BXNayNJzpQoWuAmXbj5gVMAAxVR8HqZWCtokuZM3kVAZ");
 
 #[program]
 pub mod grand_bazaar {
+
     use super::*;
 
     /* Compressed Tradables */
@@ -34,8 +38,12 @@ pub mod grand_bazaar {
         Ok(())
     }
 
-    pub fn mint_to_item_account(ctx: Context<MintToItemAccount>) -> Result<()> {
-        mint_to_item_account::handler(ctx).unwrap();
+    pub fn mint_to_item_account(
+        ctx: Context<MintToItemAccount>,
+        metadata: MetadataArgs,
+        amt_inc: u64,
+    ) -> Result<()> {
+        mint_to_item_account::handler(ctx, metadata, amt_inc).unwrap();
         Ok(())
     }
 
