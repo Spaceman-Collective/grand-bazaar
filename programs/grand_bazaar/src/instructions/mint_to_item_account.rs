@@ -5,4 +5,8 @@ pub fn handler(ctx: Context<MintToItemAccount>) -> Result<()> {
 }
 
 #[derive(Accounts)]
-pub struct MintToItemAccount {}
+pub struct MintToItemAccount<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
