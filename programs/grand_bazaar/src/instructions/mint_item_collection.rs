@@ -96,7 +96,7 @@ pub fn handler(
 }
 
 #[derive(Accounts)]
-#[instruction(metadata:GameMetadata)]
+#[instruction(game_id: u64, metadata:GameMetadata)]
 pub struct MintItemCollection<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
