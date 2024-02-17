@@ -21,6 +21,7 @@ const initializeGame = async (
     )[0];
     const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
     const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
+  console.log("game ata account made");
 
     const masterEditionAccountAddress = web3.PublicKey.findProgramAddressSync(
         [
@@ -54,7 +55,8 @@ const initializeGame = async (
         uri: "https://example.com/game_metadata.json"
     };
 
-
+    console.log("executing ix init game")
+  
     const ix = await program.methods.initGame(metadata).accounts({
         signer: SIGNER.publicKey,
         systemProgram: web3.SystemProgram.programId,
@@ -74,7 +76,8 @@ const initializeGame = async (
     const { blockhash, lastValidBlockHeight } =
         await connection.getLatestBlockhash();
 
-
+    console.log("retreived blockhash");
+    
     const msg = new web3.TransactionMessage({
         payerKey: SIGNER.publicKey,
         recentBlockhash: blockhash,
@@ -86,7 +89,8 @@ const initializeGame = async (
     // console.log(Buffer.from(tx.serialize()).toString("base64"));
     // console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx)
-    // console.log("TX SIG: ", txSig);
+  // console.log("TX SIG: ", txSig);
+  return { gameMintKey, gameATA, gamePdaAddress };
 }
 
-export default initializeGame;
+export default initializeGame;  
