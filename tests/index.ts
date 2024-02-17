@@ -9,6 +9,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateA
 import { serializeUint64, ByteifyEndianess } from "byteify";
 import initializeGame from "./initialize_game";
 import { InitializedGameType } from "./types";
+import { assert, expect } from "chai";
+import mintItemCollection from "./mint_item_collection";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
 
@@ -20,15 +22,15 @@ connection.requestAirdrop(SIGNER.publicKey, 100 * web3.LAMPORTS_PER_SOL);
 
 
 describe("grand_bazaar", () => {
-  const gameId = BigInt(10); //randomU64();
+  const gameId = BigInt(10); // randomU64();
   const gameIdBuffer = Uint8Array.from(serializeUint64(gameId, { endianess: ByteifyEndianess.LITTLE_ENDIAN }));
   const MPLProgram = new web3.PublicKey(MPL_TOKEN_METADATA_PROGRAM_ID.toString());
 
-  // let game: InitializedGameType; // to reference later throughout the tests
+  let game: InitializedGameType; // to reference later throughout the tests
 
-  // it("initializes a game", async () => {
-  //   // game = await initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
-  // });
+  before(async () => {
+    game = await initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
+  });
 
   it("collection mint item", async () => {
     // let game: InitializedGameType; // to reference later throughout the tests
@@ -45,21 +47,18 @@ describe("grand_bazaar", () => {
     };
     console.log(game);
 
-    await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for tx beeing trough and game pda is created
-
     const itemPdaAdress = web3.PublicKey.findProgramAddressSync(
       [Buffer.from("game"), gameIdBuffer],
       program.programId
     )[0];
 
-    const item_collection_mintKey: anchor.web3.Keypair = anchor.web3.Keypair.generate();
-
-    // const itemMintKey = await createMint(connection, SIGNER, game.gamePdaAddress, game.gamePdaAddress, 0);
+    const itemMintKey = await createMint(connection, SIGNER, game.gamePdaAddress, game.gamePdaAddress, 0);
+    const itemATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, itemPdaAdress, true)).address;
     const metadataAccount = web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("metadata"),
         MPLProgram.toBuffer(),
-        item_collection_mintKey.publicKey.toBuffer()
+        itemMintKey.toBuffer()
       ],
       MPLProgram
     )[0];
@@ -68,21 +67,14 @@ describe("grand_bazaar", () => {
       [
           Buffer.from("metadata"),
           MPLProgram.toBuffer(),
-          item_collection_mintKey.publicKey.toBuffer(),
+          itemMintKey.toBuffer(),
           Buffer.from("edition")
       ],
       MPLProgram
     )[0];
 
-    // Derive the token account address for the item tokenaccount
-    const item_ata = web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("token"), 
-        gameIdBuffer,
-        item_collection_mintKey.publicKey.toBuffer()
-      ],
-      program.programId
-    )[0];
+    const item_ata = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, game.gamePdaAddress, true)).address;
+
 
     console.log('generating ix');
 
@@ -92,7 +84,7 @@ describe("grand_bazaar", () => {
       game: game.gamePdaAddress,
       gameCollectionMint: game.gameMintKey,
       itemAta: item_ata,
-      mint: item_collection_mintKey.publicKey,
+      mint: itemMintKey,
       tokenProgram: TOKEN_PROGRAM_ID,
       metadataAccount: metadataAccount,
       mplProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -114,7 +106,7 @@ describe("grand_bazaar", () => {
     console.log('msg received')
 
     const tx = new web3.VersionedTransaction(msg);
-    tx.sign([SIGNER, item_collection_mintKey]);
+    tx.sign([SIGNER]);
     console.log(Buffer.from(tx.serialize()).toString("base64"));
     console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx);
