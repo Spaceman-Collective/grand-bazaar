@@ -45,14 +45,14 @@ const mintItemCollection = async (
       MPLProgram
     )[0];
 
-    const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, game.gamePdaAddress, true)).address;
+    const itemATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, game.gamePdaAddress, true)).address;
 
     const ix = await program.methods.mintItemCollection(new BN(gameId.toString()), metadata).accounts({
       signer: SIGNER.publicKey,
       systemProgram: web3.SystemProgram.programId,
       game: game.gamePdaAddress,
       gameCollectionMint: game.gameMintKey,
-      gameAta: gameATA,
+      itemAta: itemATA,
       mint: itemMintKey,
       tokenProgram: TOKEN_PROGRAM_ID,
       metadataAccount: metadataAccount,
