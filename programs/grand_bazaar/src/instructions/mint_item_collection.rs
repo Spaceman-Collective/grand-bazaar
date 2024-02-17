@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{mint_to, Mint, MintTo, Token, TokenAccount},
-};
+use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use mpl_token_metadata::{
     instructions::{
         CreateMasterEditionV3Cpi, CreateMasterEditionV3CpiAccounts,

@@ -8,94 +8,95 @@ import { createSignerFromKeypair, generateSigner, keypairIdentity } from '@metap
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { createTree, mplBubblegum } from '@metaplex-foundation/mpl-bubblegum'
 
-import {MPL_BUBBLEGUM_PROGRAM_ID, TokenProgramVersion} from "@metaplex-foundation/mpl-bubblegum";
+import { MPL_BUBBLEGUM_PROGRAM_ID, TokenProgramVersion } from "@metaplex-foundation/mpl-bubblegum";
 import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, SPL_NOOP_PROGRAM_ID, ValidDepthSizePair, getConcurrentMerkleTreeAccountSize } from "@solana/spl-account-compression";
 import { MintedCollection } from "./types";
 import { readFileSync } from "fs";
 
 interface MintItemAccountTypes {
-  connection: web3.Connection,
-  SIGNER: web3.Keypair,
-  program: Program<GrandBazaar>,
-  gameIdBuffer: Uint8Array,
-  gameId: bigint,
-  collection: MintedCollection
+    connection: web3.Connection,
+    SIGNER: web3.Keypair,
+    program: Program<GrandBazaar>,
+    gameIdBuffer: Uint8Array,
+    gameId: bigint,
+    collection: MintedCollection
 }
 
 const mintItemAccount = async (
-  { connection, SIGNER, program, collection, gameIdBuffer, gameId } : MintItemAccountTypes) => {
-  
-  const umi = createUmi(connection).use(mplBubblegum());
-  const mySecretKey = Uint8Array.from(JSON.parse(readFileSync('./keypairs/testing_pair.json').toString()));
-  const myKeypair = umi.eddsa.createKeypairFromSecretKey(mySecretKey);
-  const myKeypairSigner = createSignerFromKeypair(umi, myKeypair);
-  umi.use(keypairIdentity(myKeypairSigner));
+    { connection, SIGNER, program, collection, gameIdBuffer, gameId }: MintItemAccountTypes) => {
 
-  //create merkle tree
-  const merkleTree = generateSigner(umi);
-  const builder = await createTree(umi, { 
-      merkleTree,
-      maxDepth: 14, //this tree would allow us around 10k item accounts to be minted
-      maxBufferSize: 64,
-  });
-  await builder.sendAndConfirm(umi);
+    const umi = createUmi(connection).use(mplBubblegum());
+    const mySecretKey = Uint8Array.from(JSON.parse(readFileSync('./keypairs/testing_pair.json').toString()));
+    const myKeypair = umi.eddsa.createKeypairFromSecretKey(mySecretKey);
+    const myKeypairSigner = createSignerFromKeypair(umi, myKeypair);
+    umi.use(keypairIdentity(myKeypairSigner));
 
-  console.log("Merkle Tree:", merkleTree.publicKey);
+    //create merkle tree
+    const merkleTree = generateSigner(umi);
+    const builder = await createTree(umi, {
+        merkleTree,
+        maxDepth: 14, //this tree would allow us around 10k item accounts to be minted
+        maxBufferSize: 64,
+    });
+    await builder.sendAndConfirm(umi);
 
-  const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
-      [new PublicKey(merkleTree.publicKey).toBuffer()],
-      new PublicKey("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
-  );
-  
-  const gamePdaAddress = web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("game"), gameIdBuffer],
-      program.programId
-  )[0];
+    console.log("Merkle Tree:", merkleTree.publicKey);
 
-  // Item data
-  const accountData = {
-      ItemCollection: "itemCollectionMint",
-      Amount: "1",
-  };
-  const dataStr = JSON.stringify(accountData);
-  const init_data = new TextEncoder().encode(dataStr);
+    const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
+        [new PublicKey(merkleTree.publicKey).toBuffer()],
+        new PublicKey("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"),
+    );
 
-  // has to be smaller than 200 bytes
-  if (init_data.length > 199) {
-      throw new Error("init_data exceeds the maximum allowed length.");
-  }
+    const gamePdaAddress = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("game"), gameIdBuffer],
+        program.programId
+    )[0];
 
-  const ix = await program.methods.mintItemAccount(new BN(gameId.toString()), Buffer.from(init_data)).accounts({
-      signer: SIGNER.publicKey,
-      systemProgram: web3.SystemProgram.programId,
-      game: gamePdaAddress,
-      itemCollectionMint: collection.mintKey,
-      itemCollectionMetadata: collection.metadataAccount,
-      itemCollectionEdition: collection.masterEditionAccount,
-      treeAuthority: treeAuthority,
-      newLeafOwner: SIGNER.publicKey,
-      merkleTree: new PublicKey(merkleTree.publicKey),
-      logWrapper: SPL_NOOP_PROGRAM_ID,
-      compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-      bubblegumProgram: MPL_BUBBLEGUM_PROGRAM_ID,
-      mplProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-  }).instruction();
+    // Item data
+    const accountData = {
+        ItemCollection: "itemCollectionMint",
+        Amount: "1",
+    };
+    const dataStr = JSON.stringify(accountData);
+    const init_data = new TextEncoder().encode(dataStr);
 
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    // has to be smaller than 200 bytes
+    if (init_data.length > 199) {
+        throw new Error("init_data exceeds the maximum allowed length.");
+    }
 
-  const msg = new web3.TransactionMessage({
-      payerKey: SIGNER.publicKey,
-      recentBlockhash: blockhash,
-      instructions: [ix],
-  }).compileToV0Message();
+    const ix = await program.methods.mintItemAccount(new BN(gameId.toString()), Buffer.from(init_data)).accounts({
+        signer: SIGNER.publicKey,
+        systemProgram: web3.SystemProgram.programId,
+        game: gamePdaAddress,
+        itemCollectionMint: collection.mintKey,
+        itemCollectionMetadata: collection.metadataAccount,
+        itemCollectionEdition: collection.masterEditionAccount,
+        treeAuthority: treeAuthority,
+        newLeafOwner: SIGNER.publicKey,
+        merkleTree: new PublicKey(merkleTree.publicKey),
+        logWrapper: SPL_NOOP_PROGRAM_ID,
+        compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+        bubblegumProgram: MPL_BUBBLEGUM_PROGRAM_ID,
+        mplProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        bubblegumSigner: new PublicKey("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK")
+    }).instruction();
 
-  const tx = new web3.VersionedTransaction(msg);
-  tx.sign([SIGNER]);
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
-  console.log("META ACCOUNT: ", collection.metadataAccount.toString());
-  console.log(await connection.simulateTransaction(tx));
-  const txSig = await connection.sendTransaction(tx);
-  console.log("TX SIG: ", txSig);
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+
+    const msg = new web3.TransactionMessage({
+        payerKey: SIGNER.publicKey,
+        recentBlockhash: blockhash,
+        instructions: [ix],
+    }).compileToV0Message();
+
+    const tx = new web3.VersionedTransaction(msg);
+    tx.sign([SIGNER]);
+    console.log(Buffer.from(tx.serialize()).toString("base64"));
+    console.log("META ACCOUNT: ", collection.metadataAccount.toString());
+    console.log(await connection.simulateTransaction(tx));
+    const txSig = await connection.sendTransaction(tx);
+    console.log("TX SIG: ", txSig);
 };
 
 export default mintItemAccount;
