@@ -33,7 +33,7 @@ pub fn handler(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
-                to: ctx.accounts.game_ata.to_account_info(),
+                to: ctx.accounts.item_ata.to_account_info(),
                 authority: ctx.accounts.game.to_account_info(),
             },
             signer_seeds,
@@ -109,7 +109,7 @@ pub struct MintItemCollection<'info> {
     pub game: Account<'info, GamePDA>,
     pub game_collection_mint: Account<'info, Mint>,
     #[account(mut)]
-    pub game_ata: Account<'info, TokenAccount>,
+    pub item_ata: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub mint: Account<'info, Mint>,

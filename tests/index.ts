@@ -70,7 +70,7 @@ describe("grand_bazaar", () => {
       MPLProgram
     )[0];
 
-    const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, game.gamePdaAddress, true)).address;
+    const item_ata = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, itemMintKey, game.gamePdaAddress, true)).address;
 
 
     console.log('generating ix');
@@ -80,7 +80,7 @@ describe("grand_bazaar", () => {
       systemProgram: web3.SystemProgram.programId,
       game: game.gamePdaAddress,
       gameCollectionMint: game.gameMintKey,
-      gameAta: gameATA,
+      itemAta: item_ata,
       mint: itemMintKey,
       tokenProgram: TOKEN_PROGRAM_ID,
       metadataAccount: metadataAccount,
