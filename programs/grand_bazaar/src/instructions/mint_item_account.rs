@@ -13,14 +13,7 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
 
     let ds_data= ctx.accounts.item_collection_metadata.try_borrow_data()?;
     // TODO check that the init_data can be deserialized 
-<<<<<<< HEAD
-    let metadata_borrow = ctx.accounts.item_collection_metadata.data.borrow_mut();
-    let metadata_ref = &mut &**metadata_borrow;
-    let item_metadata = Metadata::deserialize(metadata_ref).unwrap();
-    
-=======
     let item_metadata = Metadata::safe_deserialize(&ds_data)?;
->>>>>>> gb_test_copy
     let data_str = init_data.iter().map(|&b| b.to_string()).collect::<Vec<_>>().join(",");
     if data_str.len() > 199 {
         return err!(MintItemAccountErrors::InitDataLenExceedsMaxSize)
