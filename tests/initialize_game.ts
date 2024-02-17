@@ -4,24 +4,24 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateA
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 
 interface InitializeGameTypes {
-  connection: web3.Connection,
-  SIGNER: web3.Keypair,
-  program: Program<GrandBazaar>,
-  MPLProgram: web3.PublicKey,
-  gameIdBuffer: Uint8Array,
-  gameId: bigint
+    connection: web3.Connection,
+    SIGNER: web3.Keypair,
+    program: Program<GrandBazaar>,
+    MPLProgram: web3.PublicKey,
+    gameIdBuffer: Uint8Array,
+    gameId: bigint
 }
 
 const initializeGame = async (
-  { connection, SIGNER, program, MPLProgram, gameIdBuffer, gameId } : InitializeGameTypes) => {
-  await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for airdrop to go through
+    { connection, SIGNER, program, MPLProgram, gameIdBuffer, gameId }: InitializeGameTypes) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for airdrop to go through
     const gamePdaAddress = web3.PublicKey.findProgramAddressSync(
         [Buffer.from("game"), gameIdBuffer],
         program.programId
     )[0];
     const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
     const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
-  console.log("game ata account made");
+    console.log("game ata account made");
 
     const masterEditionAccountAddress = web3.PublicKey.findProgramAddressSync(
         [
@@ -56,7 +56,7 @@ const initializeGame = async (
     };
 
     console.log("executing ix init game")
-  
+
     const ix = await program.methods.initGame(metadata).accounts({
         signer: SIGNER.publicKey,
         systemProgram: web3.SystemProgram.programId,
@@ -77,7 +77,7 @@ const initializeGame = async (
         await connection.getLatestBlockhash();
 
     console.log("retreived blockhash");
-    
+
     const msg = new web3.TransactionMessage({
         payerKey: SIGNER.publicKey,
         recentBlockhash: blockhash,
@@ -86,11 +86,12 @@ const initializeGame = async (
 
     const tx = new web3.VersionedTransaction(msg);
     tx.sign([SIGNER])
-    // console.log(Buffer.from(tx.serialize()).toString("base64"));
-    // console.log(await connection.simulateTransaction(tx));
+    console.log(Buffer.from(tx.serialize()).toString("base64"));
+    console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx)
-  // console.log("TX SIG: ", txSig);
-  return { gameMintKey, gameATA, gamePdaAddress };
+    // console.log("TX SIG: ", txSig);
+    console.log("Game Master Edition: ", masterEditionAccountAddress.toString());
+    return { gameMintKey, gameATA, gamePdaAddress };
 }
 
 export default initializeGame;  

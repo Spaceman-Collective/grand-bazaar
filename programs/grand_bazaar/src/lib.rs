@@ -34,7 +34,7 @@ pub mod grand_bazaar {
         game_id: u64,
         init_data: Vec<u8>,
     ) -> Result<()> {
-        mint_item_account::handler(ctx, game_id, init_data).unwrap();
+        mint_item_account::handler(ctx, game_id, init_data)?;
         Ok(())
     }
 
