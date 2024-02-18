@@ -20,8 +20,23 @@ const initializeGame = async (
         [Buffer.from("game"), gameIdBuffer],
         program.programId
     )[0];
-    const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
-    const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
+    // const gameMintKey = await createMint(connection, SIGNER, gamePdaAddress, gamePdaAddress, 0);
+    // const gameATA = (await getOrCreateAssociatedTokenAccount(connection, SIGNER, gameMintKey, gamePdaAddress, true)).address;
+    // Derive the token account address for the token mint
+
+    const gameMintKey = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("mint"), gameIdBuffer],
+        program.programId
+    )[0];
+
+    const gameATA = web3.PublicKey.findProgramAddressSync(
+        [
+            gamePdaAddress.toBuffer(),
+            TOKEN_PROGRAM_ID.toBuffer(),
+            gameMintKey.toBuffer(),
+        ],
+        ASSOCIATED_TOKEN_PROGRAM_ID
+    )[0];
 
     const masterEditionAccountAddress = web3.PublicKey.findProgramAddressSync(
         [
@@ -42,12 +57,6 @@ const initializeGame = async (
         MPLProgram
     )[0];
 
-    // Derive the token account address for the token mint
-    const tokenAccountAddress = web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("token"), gameIdBuffer],
-        program.programId
-    )[0];
-
     const metadata = {
         gameId: new BN(gameId.toString()),
         name: "Legends of the Sun",
@@ -65,7 +74,7 @@ const initializeGame = async (
         metadataAccount: nftMetadataAccountAddress,
         mplProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         masterEditionAccount: masterEditionAccountAddress,
-        ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         sysvarInstructions: web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         rentAccount: web3.SYSVAR_RENT_PUBKEY,
         gameAta: gameATA
