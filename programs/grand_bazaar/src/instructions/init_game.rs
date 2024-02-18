@@ -107,12 +107,26 @@ pub struct InitGame<'info> {
         bump,
     )]
     pub game: Account<'info, GamePDA>,
-    #[account(mut)]
-    pub game_ata: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = signer,
+        seeds = [b"mint".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
+        bump,
+        mint::decimals = 0,
+        mint::authority = game.to_account_info(),
+        mint::freeze_authority = game.to_account_info(),
+    )]
+    pub mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
+
+    #[account(
+        init,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = game.to_account_info(),
+    )]
+    pub game_ata: Account<'info, TokenAccount>,
 
     // Metadata
     /// CHECK: Metadata program will create it
@@ -141,7 +155,7 @@ pub struct InitGame<'info> {
     pub master_edition_account: UncheckedAccount<'info>,
 
     // Minting NFT
-    pub ata_program: Program<'info, AssociatedToken>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]

@@ -63,7 +63,7 @@ pub fn handler(
         .system_program(&ctx.accounts.system_program.to_account_info())
         .sysvar_instructions(&ctx.accounts.sysvar_instructions.to_account_info())
         .spl_token_program(&ctx.accounts.token_program.to_account_info())
-        .spl_ata_program(&ctx.accounts.ata_program.to_account_info())
+        .spl_ata_program(&ctx.accounts.associated_token_program.to_account_info())
         .amount(1)
         .invoke_signed(signer_seeds)?;
 
@@ -140,9 +140,20 @@ pub fn handler(
 #[derive(Accounts)]
 #[instruction(game_id: u64, metadata:GameMetadata)]
 pub struct MintItemCollection<'info> {
+    #[account(
+        init,
+        payer = signer,
+        mint::decimals = 0,
+        mint::authority = game.to_account_info(),
+        mint::freeze_authority = game.to_account_info(),
+    )]
+    pub mint: Box<Account<'info, Mint>>,
+
     #[account(mut)]
     pub signer: Signer<'info>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 
     #[account(
         seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
@@ -150,13 +161,15 @@ pub struct MintItemCollection<'info> {
     )]
     pub game: Account<'info, GamePDA>,
     pub game_collection_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub item_ata: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
-    pub ata_program: Program<'info, AssociatedToken>,
+    #[account(
+        init,
+        payer = signer,
+        associated_token::mint = mint,
+        associated_token::authority = game.to_account_info(),
+    )]
+    pub item_ata: Account<'info, TokenAccount>,
+    
 
     // Metadata
     /// CHECK: Metadata program will create it
