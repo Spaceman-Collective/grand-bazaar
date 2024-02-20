@@ -40,7 +40,7 @@ const mintItemAccount = async (
     });
     await builder.sendAndConfirm(umi);
 
-    console.log("Merkle Tree:", merkleTree.publicKey);
+    // console.log("Merkle Tree:", merkleTree.publicKey);
 
     const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
         [new PublicKey(merkleTree.publicKey).toBuffer()],
@@ -92,11 +92,11 @@ const mintItemAccount = async (
 
     const tx = new web3.VersionedTransaction(msg);
     tx.sign([SIGNER]);
-    console.log(Buffer.from(tx.serialize()).toString("base64"));
-    console.log("META ACCOUNT: ", collection.metadataAccount.toString());
-    console.log(await connection.simulateTransaction(tx));
+    // console.log(Buffer.from(tx.serialize()).toString("base64"));
+    // console.log("META ACCOUNT: ", collection.metadataAccount.toString());
+    // console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx);
-    console.log("TX SIG: ", txSig);
+    // console.log("TX SIG: ", txSig);
 };
 
 export default mintItemAccount;

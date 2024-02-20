@@ -40,10 +40,9 @@ pub mod grand_bazaar {
 
     pub fn mint_to_item_account(
         ctx: Context<MintToItemAccount>,
-        metadata: MetadataArgs,
         amt_inc: u64,
     ) -> Result<()> {
-        mint_to_item_account::handler(ctx, metadata, amt_inc).unwrap();
+        mint_to_item_account::handler(ctx, amt_inc).unwrap();
         Ok(())
     }
 

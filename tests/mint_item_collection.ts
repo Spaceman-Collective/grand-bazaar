@@ -72,10 +72,10 @@ const mintItemCollection = async (
 
   const tx = new web3.VersionedTransaction(msg);
   tx.sign([SIGNER]);
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
-  console.log(await connection.simulateTransaction(tx));
+  // console.log(Buffer.from(tx.serialize()).toString("base64"));
+  // console.log(await connection.simulateTransaction(tx));
   const txSig = await connection.sendTransaction(tx);
-  console.log("Item Master Edition: ", masterEditionAccountAddress.toString());
+  // console.log("Item Master Edition: ", masterEditionAccountAddress.toString());
   return { mintKey: itemMintKey, metadataAccount, masterEditionAccount: masterEditionAccountAddress }
 }
 

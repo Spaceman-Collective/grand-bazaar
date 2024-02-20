@@ -4,7 +4,6 @@ use mpl_bubblegum::types::MetadataArgs;
 
 pub fn handler(
     ctx: Context<MintToItemAccount>,
-    metadata_args: MetadataArgs,
     amt_increment: u64,
 ) -> Result<()> {
     /*
