@@ -2,6 +2,7 @@ import { BN, Program, web3 } from "@coral-xyz/anchor";
 import { GrandBazaar } from "../target/types/grand_bazaar";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { InitializedGameType } from "./types";
 
 interface InitializeGameTypes {
     connection: web3.Connection,
@@ -91,7 +92,7 @@ const initializeGame = async (
     const txSig = await connection.sendTransaction(tx)
     // console.log("TX SIG: ", txSig);
     // console.log("Game Master Edition: ", masterEditionAccountAddress.toString());
-    return { gameMintKey, gameATA, gamePdaAddress };
+    return { gameMintKey, gameATA, gamePdaAddress } as InitializedGameType;
 }
 
 export default initializeGame;

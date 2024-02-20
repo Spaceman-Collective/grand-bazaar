@@ -1,9 +1,10 @@
 import { web3 } from "@coral-xyz/anchor"
+import { Account } from "@solana/spl-token"
 
 export type InitializedGameType = {
-  gamePdaAddress: any,
-  gameMintKey: any,
-  gameATA: any
+  gamePdaAddress: web3.PublicKey,
+  gameMintKey: web3.PublicKey,
+  gameATA: web3.PublicKey
 }
 
 export type MintedCollection = {

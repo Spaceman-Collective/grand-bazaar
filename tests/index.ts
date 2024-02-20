@@ -4,7 +4,6 @@ const IDL = require("../target/idl/grand_bazaar.json");
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { randomU64 } from "./util";
 import { readFileSync } from 'fs';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { serializeUint64, ByteifyEndianess } from "byteify";
 import initializeGame from "./initialize_game";
 import { InitializedGameType, MintedCollection } from "./types";

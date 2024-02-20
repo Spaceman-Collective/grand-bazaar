@@ -9,7 +9,7 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { createTree, mplBubblegum } from '@metaplex-foundation/mpl-bubblegum'
 
 import { MPL_BUBBLEGUM_PROGRAM_ID, TokenProgramVersion } from "@metaplex-foundation/mpl-bubblegum";
-import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, SPL_NOOP_PROGRAM_ID, ValidDepthSizePair, getConcurrentMerkleTreeAccountSize } from "@solana/spl-account-compression";
+import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, SPL_NOOP_PROGRAM_ID } from "@solana/spl-account-compression";
 import { MintedCollection } from "./types";
 import { readFileSync } from "fs";
 

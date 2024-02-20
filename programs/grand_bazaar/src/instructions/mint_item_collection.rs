@@ -145,7 +145,7 @@ pub struct MintItemCollection<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
-        seeds = [b"game".as_ref(), metadata.game_id.to_le_bytes().as_ref()],
+        seeds = [b"game".as_ref(), game_id.to_le_bytes().as_ref()],
         bump,
     )]
     pub game: Account<'info, GamePDA>,
