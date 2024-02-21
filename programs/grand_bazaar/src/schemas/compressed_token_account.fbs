@@ -1,5 +1,4 @@
 table CompressedTokenAccount {
-    collection_id: [ubyte];
     amount: ulong;
 }
 

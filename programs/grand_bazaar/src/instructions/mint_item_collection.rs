@@ -1,17 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+    token::{Mint, Token, TokenAccount},
 };
 use mpl_token_metadata::{
-    accounts::MasterEdition,
-    instructions::{
-        CreateMasterEditionV3Cpi, CreateMasterEditionV3CpiAccounts,
-        CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3Cpi,
-        CreateMetadataAccountV3CpiAccounts, CreateMetadataAccountV3InstructionArgs,
-        CreateV1CpiBuilder, MintV1CpiBuilder,
-    },
-    types::{Collection, CollectionDetails, DataV2, PrintSupply, TokenStandard},
+    instructions::{CreateV1CpiBuilder, MintV1CpiBuilder},
+    types::{Collection, CollectionDetails, PrintSupply, TokenStandard},
     ID as MPL_TOKEN_METADATA_ID,
 };
 
@@ -187,7 +181,6 @@ pub struct MintItemCollection<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ItemMetadata {
-    pub item_id: u64,
     pub name: String,
     pub symbol: String,
     pub uri: String,

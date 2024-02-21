@@ -4,7 +4,6 @@ mod state;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-use mpl_bubblegum::types::MetadataArgs;
 use state::*;
 
 declare_id!("BXNayNJzpQoWuAmXbj5gVMAAxVR8HqZWCtokuZM3kVAZ");
@@ -40,9 +39,13 @@ pub mod grand_bazaar {
 
     pub fn mint_to_item_account(
         ctx: Context<MintToItemAccount>,
-        amt_inc: u64,
+        item_metadata: ItemMetadata,
+        merkle_info: MerkleInfo,
+        game_id: u64,
+        amt_increment: u64,
     ) -> Result<()> {
-        mint_to_item_account::handler(ctx, amt_inc).unwrap();
+        mint_to_item_account::handler(ctx, item_metadata, merkle_info, game_id, amt_increment)
+            .unwrap();
         Ok(())
     }
 

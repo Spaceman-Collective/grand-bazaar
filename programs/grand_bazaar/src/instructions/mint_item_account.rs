@@ -1,8 +1,9 @@
 
 use crate::*;
 use anchor_lang::prelude::*;
+use base64::prelude::*;
 use anchor_spl::token::Mint;
-use mpl_bubblegum::{instructions::{MintToCollectionV1Cpi, MintToCollectionV1CpiAccounts, MintToCollectionV1CpiBuilder, MintToCollectionV1InstructionArgs}, types::{Collection, MetadataArgs, TokenProgramVersion}};
+use mpl_bubblegum::{instructions::MintToCollectionV1CpiBuilder, types::{Collection, MetadataArgs, TokenProgramVersion}};
 use mpl_token_metadata::{accounts::Metadata, ID as MPL_TOKEN_METADATA_ID};
 use spl_account_compression::{program::SplAccountCompression, Noop};
 
@@ -12,14 +13,14 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
     let signer_seeds = &[&seeds[..]];
 
     let ds_data= ctx.accounts.item_collection_metadata.try_borrow_data()?;
-    // TODO check that the init_data can be deserialized 
     let item_metadata = Metadata::safe_deserialize(&ds_data)?;
-    let data_str = init_data.iter().map(|&b| b.to_string()).collect::<Vec<_>>().join(",");
-    if data_str.len() > 199 {
+
+    let data_str = BASE64_STANDARD.encode(init_data);
+    if data_str.len() > 200 {
         return err!(MintItemAccountErrors::InitDataLenExceedsMaxSize)
     }
     drop(ds_data);
-
+    
 
     MintToCollectionV1CpiBuilder::new(
         &ctx.accounts.bubblegum_program.to_account_info()
@@ -54,47 +55,6 @@ pub fn handler(ctx: Context<MintItemAccount>, game_id: u64, init_data: Vec<u8>) 
             creators: vec![]
         }).invoke_signed(signer_seeds)?;
 
-
-    /*
-    // Mint Item Account
-    MintToCollectionV1Cpi::new(
-        &ctx.accounts.bubblegum_program,
-        MintToCollectionV1CpiAccounts {
-            tree_config: &ctx.accounts.tree_authority.to_account_info(),
-            leaf_owner: &ctx.accounts.new_leaf_owner.to_account_info(),
-            leaf_delegate: &ctx.accounts.new_leaf_owner.to_account_info(),
-            merkle_tree: &ctx.accounts.merkle_tree.to_account_info(),
-            payer: &ctx.accounts.signer.to_account_info(),
-            tree_creator_or_delegate: &ctx.accounts.signer.to_account_info(),
-            collection_authority: &ctx.accounts.game.to_account_info(),
-            collection_authority_record_pda: None,
-            collection_mint: &ctx.accounts.item_collection_mint.to_account_info(),
-            collection_metadata: &ctx.accounts.item_collection_metadata.to_account_info(),
-            collection_edition: &ctx.accounts.item_collection_edition.to_account_info(),
-            bubblegum_signer: &ctx.accounts.bubblegum_signer.to_account_info(),
-            log_wrapper: &ctx.accounts.log_wrapper.to_account_info(),
-            compression_program: &ctx.accounts.compression_program.to_account_info(),
-            token_metadata_program: &ctx.accounts.mpl_program.to_account_info(),
-            system_program: &ctx.accounts.system_program.to_account_info()
-        },
-        MintToCollectionV1InstructionArgs {
-            metadata: MetadataArgs {
-                name: item_metadata.name,
-                symbol: item_metadata.symbol,
-                uri: data_str,
-                seller_fee_basis_points: 0,
-                primary_sale_happened: true,
-                is_mutable: true,
-                edition_nonce: None,
-                token_standard: None,
-                collection: Some(Collection {verified: false, key: ctx.accounts.item_collection_mint.key()}),
-                uses: None,
-                token_program_version: TokenProgramVersion::Original,
-                creators: vec![]
-            }
-        }
-    ).invoke_signed(signer_seeds)?;
-    */
     Ok(())
 }
 
@@ -143,7 +103,6 @@ pub struct MintItemAccount<'info> {
     pub mpl_program: AccountInfo<'info>,
     /// CHECK: Blah
     pub bubblegum_signer: AccountInfo<'info>
-
 }
 
 #[error_code]

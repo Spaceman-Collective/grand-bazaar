@@ -25,8 +25,7 @@ impl<'a> flatbuffers::Follow<'a> for CompressedTokenAccount<'a> {
 }
 
 impl<'a> CompressedTokenAccount<'a> {
-  pub const VT_COLLECTION_ID: flatbuffers::VOffsetT = 4;
-  pub const VT_AMOUNT: flatbuffers::VOffsetT = 6;
+  pub const VT_AMOUNT: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -35,22 +34,14 @@ impl<'a> CompressedTokenAccount<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-    args: &'args CompressedTokenAccountArgs<'args>
+    args: &'args CompressedTokenAccountArgs
   ) -> flatbuffers::WIPOffset<CompressedTokenAccount<'bldr>> {
     let mut builder = CompressedTokenAccountBuilder::new(_fbb);
     builder.add_amount(args.amount);
-    if let Some(x) = args.collection_id { builder.add_collection_id(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn collection_id(&self) -> Option<flatbuffers::Vector<'a, u8>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(CompressedTokenAccount::VT_COLLECTION_ID, None)}
-  }
   #[inline]
   pub fn amount(&self) -> u64 {
     // Safety:
@@ -67,21 +58,18 @@ impl flatbuffers::Verifiable for CompressedTokenAccount<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("collection_id", Self::VT_COLLECTION_ID, false)?
      .visit_field::<u64>("amount", Self::VT_AMOUNT, false)?
      .finish();
     Ok(())
   }
 }
-pub struct CompressedTokenAccountArgs<'a> {
-    pub collection_id: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
+pub struct CompressedTokenAccountArgs {
     pub amount: u64,
 }
-impl<'a> Default for CompressedTokenAccountArgs<'a> {
+impl<'a> Default for CompressedTokenAccountArgs {
   #[inline]
   fn default() -> Self {
     CompressedTokenAccountArgs {
-      collection_id: None,
       amount: 0,
     }
   }
@@ -92,10 +80,6 @@ pub struct CompressedTokenAccountBuilder<'a: 'b, 'b> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b> CompressedTokenAccountBuilder<'a, 'b> {
-  #[inline]
-  pub fn add_collection_id(&mut self, collection_id: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(CompressedTokenAccount::VT_COLLECTION_ID, collection_id);
-  }
   #[inline]
   pub fn add_amount(&mut self, amount: u64) {
     self.fbb_.push_slot::<u64>(CompressedTokenAccount::VT_AMOUNT, amount, 0);
@@ -118,7 +102,6 @@ impl<'a: 'b, 'b> CompressedTokenAccountBuilder<'a, 'b> {
 impl core::fmt::Debug for CompressedTokenAccount<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("CompressedTokenAccount");
-      ds.field("collection_id", &self.collection_id());
       ds.field("amount", &self.amount());
       ds.finish()
   }

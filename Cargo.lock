@@ -996,6 +996,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "base64 0.21.7",
  "flatbuffers",
  "mpl-bubblegum",
  "mpl-token-metadata",
