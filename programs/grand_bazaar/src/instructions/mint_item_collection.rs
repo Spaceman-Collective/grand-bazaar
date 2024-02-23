@@ -181,6 +181,7 @@ pub struct MintItemCollection<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ItemMetadata {
+    pub item_id: u64,
     pub name: String,
     pub symbol: String,
     pub uri: String,
