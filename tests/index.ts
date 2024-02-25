@@ -6,10 +6,11 @@ import { randomU64 } from "./util";
 import { readFileSync } from 'fs';
 import { serializeUint64, ByteifyEndianess } from "byteify";
 import initializeGame from "./initialize_game";
-import { InitializedGameType, MintedCollection } from "./types";
+import { InitializedGameType, MintedCollection, MintedItemAccount } from "./types";
 import { assert, expect } from "chai";
 import mintItemCollection from "./mint_item_collection";
 import mintItemAccount from "./mint_item_account";
+import mintToItemCollection from "./mint_to_item_collection";
 
 const connection = new web3.Connection("http://localhost:8899", "confirmed");
 
@@ -19,6 +20,8 @@ const SIGNER = web3.Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSyn
 console.log("Using signer: ", SIGNER.publicKey.toString());
 connection.requestAirdrop(SIGNER.publicKey, 100 * web3.LAMPORTS_PER_SOL);
 
+const amount = BigInt(1)
+
 
 describe("grand_bazaar", () => {
   const gameId = BigInt(10); // randomU64();
@@ -27,6 +30,7 @@ describe("grand_bazaar", () => {
 
   let game: InitializedGameType; // to reference later throughout the tests
   let collection: MintedCollection;
+  let itemAccount: MintedItemAccount;
 
   before(async () => {
     game = await initializeGame({ gameId, SIGNER, connection, MPLProgram, gameIdBuffer, program });
@@ -40,7 +44,6 @@ describe("grand_bazaar", () => {
 
   before(async () => {
     collection = await mintItemCollection({ connection, SIGNER, game, gameId, MPLProgram, program });
-
   });
 
   it("mint item collection", () => {
@@ -48,7 +51,11 @@ describe("grand_bazaar", () => {
   });
 
   it("init an item account", async () => {
-    await mintItemAccount({ gameId, SIGNER, connection, collection , gameIdBuffer, program });
+    itemAccount = await mintItemAccount({ gameId, SIGNER, connection, collection , gameIdBuffer, program });
   });
 
+  it("mint to item collection", async () => {
+    await mintToItemCollection({ connection, SIGNER, program, collection, gameIdBuffer, gameId, amount, itemAccount});
+  });
+  
 });

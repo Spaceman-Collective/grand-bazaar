@@ -1,4 +1,4 @@
-import { web3 } from "@coral-xyz/anchor"
+import { BN, web3 } from "@coral-xyz/anchor"
 import { Account } from "@solana/spl-token"
 
 export type InitializedGameType = {
@@ -10,5 +10,11 @@ export type InitializedGameType = {
 export type MintedCollection = {
   mintKey: web3.PublicKey,
   metadataAccount: web3.PublicKey,
-  masterEditionAccount: web3.PublicKey
+  masterEditionAccount: web3.PublicKey,
+  itemId: bigint
+}
+
+export type MintedItemAccount = {
+  merkleTree: any,
+  leafIndex: BN
 }

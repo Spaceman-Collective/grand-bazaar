@@ -2,14 +2,16 @@ import { web3, Program, BN } from "@coral-xyz/anchor";
 import { GrandBazaar } from "../target/types/grand_bazaar";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionResponse, VersionedTransactionResponse } from "@solana/web3.js";
 
 import { createSignerFromKeypair, generateSigner, keypairIdentity } from '@metaplex-foundation/umi'
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { createTree, mplBubblegum } from '@metaplex-foundation/mpl-bubblegum'
+import * as bs58 from 'bs58';
+
 
 import { MPL_BUBBLEGUM_PROGRAM_ID, TokenProgramVersion } from "@metaplex-foundation/mpl-bubblegum";
-import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, SPL_NOOP_PROGRAM_ID } from "@solana/spl-account-compression";
+import { SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, SPL_NOOP_PROGRAM_ID,  ChangeLogEventV1, deserializeChangeLogEventV1} from "@solana/spl-account-compression";
 import { MintedCollection } from "./types";
 import { readFileSync } from "fs";
 
@@ -20,6 +22,39 @@ interface MintItemAccountTypes {
     gameIdBuffer: Uint8Array,
     gameId: bigint,
     collection: MintedCollection
+}
+
+function getAllChangeLogEventV1FromTransaction(
+    txResponse: TransactionResponse | VersionedTransactionResponse,
+    noopProgramId: PublicKey = SPL_NOOP_PROGRAM_ID
+  ): ChangeLogEventV1[] {
+    if (!txResponse) throw Error(`No txResponse provided. Response was: ${JSON.stringify(txResponse)}`);
+
+    const accountKeys = txResponse.transaction.message
+      .getAccountKeys()
+      .keySegments()
+      .flat();
+  
+    let changeLogEvents: ChangeLogEventV1[] = [];
+  
+    txResponse!.meta?.innerInstructions?.forEach((compiledIx) => {
+      compiledIx.instructions.forEach((innerIx) => {
+        if (
+          noopProgramId.toBase58() !==
+          accountKeys[innerIx.programIdIndex].toBase58()
+        )
+          return;
+  
+        try {
+          changeLogEvents.push(
+            deserializeChangeLogEventV1(Buffer.from(bs58.decode(innerIx.data)))
+          );
+        } catch (__) {
+        }
+      });
+    });
+  
+    return changeLogEvents;
 }
 
 const mintItemAccount = async (
@@ -96,6 +131,21 @@ const mintItemAccount = async (
     // console.log("META ACCOUNT: ", collection.metadataAccount.toString());
     // console.log(await connection.simulateTransaction(tx));
     const txSig = await connection.sendTransaction(tx);
+
+    await connection.confirmTransaction(txSig, 'confirmed');
+
+    const txResponse = await connection.getTransaction(txSig, {
+        commitment: 'confirmed',
+        maxSupportedTransactionVersion: 0
+    });
+
+    const events = getAllChangeLogEventV1FromTransaction(txResponse);
+    const leafIndex = new BN(events[0].index);
+
+    return {
+        merkleTree,
+        leafIndex
+    }
     // console.log("TX SIG: ", txSig);
 };
 
